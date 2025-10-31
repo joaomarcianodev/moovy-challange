@@ -1,0 +1,13 @@
+/* Define a fonte padrão e garante que o box-sizing 
+  esteja correto (embora o CssBaseline também faça isso).
+*/
+body {
+  margin: 0; /* O CssBaseline também remove isso, mas é bom garantir */
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Qualquer outro estilo global (ex: scrollbar) 
+  poderia vir aqui, mas é raro.
+*/
