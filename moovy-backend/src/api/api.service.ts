@@ -19,7 +19,7 @@ export class ApiService {
   }
 
   public async buscarDadosDaApi(title: string): Promise<any> {
-    const url = `https://www.omdbapi.com/?s=${title}&apikey=${this.apiKey}`;
+    const url = `https://www.omdbapi.com/?type=movie&s=${title}&apikey=${this.apiKey}`;
 
     try {
       const observable = this.httpService.get<any>(url);
