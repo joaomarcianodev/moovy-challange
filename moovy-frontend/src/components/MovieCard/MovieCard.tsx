@@ -15,7 +15,6 @@ import {
   RemoveCircleOutlineIcon,
 } from "./MovieCard.styles";
 
-// 1. Definimos as novas props
 interface MovieCardProps {
   movie: Movie;
   onAdd: (movie: Movie) => void; // Função chamada ao clicar em "Add"
@@ -50,7 +49,6 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onAdd, onRemove }) => {
           </Rating>
         </TitleRow>
 
-        {/* 2. Adicionamos os 'onClick' handlers */}
         {movie.isAdded ? (
           <RemoveButton
             startIcon={<RemoveCircleOutlineIcon />}

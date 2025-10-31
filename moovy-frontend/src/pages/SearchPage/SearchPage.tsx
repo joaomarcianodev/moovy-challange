@@ -63,43 +63,42 @@ const SearchPage: React.FC = () => {
         );
 
         if (!response.ok) {
-          throw new Error("Falha de rede ao buscar dados.");
+          throw new Error("Could not connect to the server.");
         }
 
         const data: ApiResponse = await response.json();
 
         if (data.Response === "True" && data.Search && data.Search.length > 0) {
+          console.log(data);
+          //Tudo ok, mostrar filmes
           setMovies(data.Search.map(mapApiToMovie));
         } else if (data.Response === "False") {
+          //Erro, não mostrar filmes
           setMovies([]);
 
           if (data.Error === "Movie not found!") {
-            setInfoMessage(
-              `Nenhum filme encontrado para "${debouncedSearchTerm}".`
-            );
+            setInfoMessage(`No movies found for "${debouncedSearchTerm}".`);
           } else if (data.Error === "Too many results.") {
             setInfoMessage(
-              "Sua busca é muito ampla. Por favor, seja mais específico."
+              "Your search is too broad. Please be more specific."
             );
           } else {
             throw new Error(data.Error);
           }
         } else {
           setMovies([]);
-          setInfoMessage(
-            `Nenhum filme encontrado para "${debouncedSearchTerm}".`
-          );
+          setInfoMessage(`An unknown error has occurred.`);
         }
       } catch (err) {
-        // **** A MUDANÇA ESTÁ AQUI ****
-        // Traduz o erro de rede para uma mensagem amigável
-        let userFriendlyMessage = "Ocorreu um erro desconhecido.";
+        //Entra no catch quando há falha com a API
+        //Erro padrão genérico
+        let userFriendlyMessage = "An unknown error has occurred.";
 
         if (err instanceof Error) {
           if (err.message === "Failed to fetch") {
             // Este é o erro de API fora do ar ou sem internet
             userFriendlyMessage =
-              "Não foi possível conectar ao servidor. Por favor, verifique sua conexão com a internet ou tente novamente mais tarde.";
+              "Could not connect to the server. Please check your internet connection or try again later.";
           } else {
             // Outros erros que podem ter vindo (ex: "Invalid API key")
             userFriendlyMessage = err.message;
@@ -116,7 +115,6 @@ const SearchPage: React.FC = () => {
     fetchMovies();
   }, [debouncedSearchTerm]);
 
-  // ... (handlers handleAddToLibrary, handleRemoveFromLibrary, handleCloseNotification) ...
   const handleAddToLibrary = (movieToAdd: Movie) => {
     setMovies((prevMovies) =>
       prevMovies.map((movie) =>
@@ -138,7 +136,6 @@ const SearchPage: React.FC = () => {
     setNotificationMessage(null);
   };
 
-  // ... (renderContent) ...
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -174,6 +171,7 @@ const SearchPage: React.FC = () => {
               xs: "1fr",
               sm: "repeat(2, 1fr)",
               md: "repeat(3, 1fr)",
+              lg: "repeat(4, 1fr)",
             },
             justifyContent: "center",
           }}

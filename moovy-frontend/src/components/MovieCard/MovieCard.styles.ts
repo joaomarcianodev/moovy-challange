@@ -18,14 +18,14 @@ export const CardImage = styled("img")({
   height: 300,
   width: "100%",
   objectFit: "cover", // Corta a imagem para caber, sem distorcer
-  flexShrink: 0, // NOVO: Garante que a imagem não encolha
+  flexShrink: 0, // Garante que a imagem não encolha
 });
 
-// NOVO: Estilo para o placeholder de imagem
+// Estilo para o placeholder de imagem
 export const CardImagePlaceholder = styled(Box)({
   height: 300,
   width: "100%",
-  backgroundColor: "#D0D0D0", // Cor cinza para o placeholder
+  backgroundColor: "#D0D0D0",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -39,13 +39,12 @@ export const CardImagePlaceholder = styled(Box)({
 export const CardBody = styled(Box)(({ theme }) => ({
   padding: theme.spacing(2),
   backgroundColor: "#ffffff",
-  flexGrow: 1, // NOVO: Permite que o body preencha o espaço restante, empurrando o botão para baixo
+  flexGrow: 1, // Permite que o body preencha o espaço restante, empurrando o botão para baixo
   display: "flex",
   flexDirection: "column",
-  justifyContent: "space-between", // NOVO: Empurra o botão para baixo se houver espaço extra
+  justifyContent: "space-between", // Empurra o botão para baixo se houver espaço extra
 }));
 
-// O resto permanece o mesmo...
 export const TitleRow = styled(Box)({
   display: "flex",
   justifyContent: "space-between",
