@@ -16,14 +16,14 @@ interface ApiMovie {
   Poster: string;
 }
 
-interface ApiResponse {
+interface Response {
   Search?: ApiMovie[];
   Response: "True" | "False";
   Error?: string;
   totalResults?: string;
 }
 
-const mapApiToMovie = (apiMovie: ApiMovie): Movie => {
+const mapResponseToMovie = (apiMovie: ApiMovie): Movie => {
   return {
     id: apiMovie.imdbID,
     title: apiMovie.Title,
@@ -66,14 +66,11 @@ const SearchPage: React.FC = () => {
           throw new Error("Could not connect to the server.");
         }
 
-        const data: ApiResponse = await response.json();
+        const data: Response = await response.json();
 
         if (data.Response === "True" && data.Search && data.Search.length > 0) {
-          console.log(data);
-          //Tudo ok, mostrar filmes
-          setMovies(data.Search.map(mapApiToMovie));
+          setMovies(data.Search.map(mapResponseToMovie));
         } else if (data.Response === "False") {
-          //Erro, não mostrar filmes
           setMovies([]);
 
           if (data.Error === "Movie not found!") {
@@ -90,21 +87,16 @@ const SearchPage: React.FC = () => {
           setInfoMessage(`An unknown error has occurred.`);
         }
       } catch (err) {
-        //Entra no catch quando há falha com a API
-        //Erro padrão genérico
         let userFriendlyMessage = "An unknown error has occurred.";
 
         if (err instanceof Error) {
           if (err.message === "Failed to fetch") {
-            // Este é o erro de API fora do ar ou sem internet
             userFriendlyMessage =
               "Could not connect to the server. Please check your internet connection or try again later.";
           } else {
-            // Outros erros que podem ter vindo (ex: "Invalid API key")
             userFriendlyMessage = err.message;
           }
         }
-
         setError(userFriendlyMessage);
         setMovies([]);
       } finally {
@@ -114,6 +106,18 @@ const SearchPage: React.FC = () => {
 
     fetchMovies();
   }, [debouncedSearchTerm]);
+
+  useEffect(() => {
+    if (notificationMessage) {
+      const timer = setTimeout(() => {
+        setNotificationMessage(null);
+      }, 5000);
+
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [notificationMessage]);
 
   const handleAddToLibrary = (movieToAdd: Movie) => {
     setMovies((prevMovies) =>
@@ -130,12 +134,14 @@ const SearchPage: React.FC = () => {
         movie.id === movieToRemove.id ? { ...movie, isAdded: false } : movie
       )
     );
+    setNotificationMessage(`${movieToRemove.title} removed from your Library`);
   };
 
   const handleCloseNotification = () => {
     setNotificationMessage(null);
   };
 
+  // ... (renderContent não muda) ...
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -144,7 +150,6 @@ const SearchPage: React.FC = () => {
         </Box>
       );
     }
-
     if (error) {
       return (
         <Typography color="error" align="center" sx={{ my: 4 }}>
@@ -152,7 +157,6 @@ const SearchPage: React.FC = () => {
         </Typography>
       );
     }
-
     if (infoMessage) {
       return (
         <Typography color="text.secondary" align="center" sx={{ my: 4 }}>
@@ -160,7 +164,6 @@ const SearchPage: React.FC = () => {
         </Typography>
       );
     }
-
     if (movies.length > 0) {
       return (
         <Box
@@ -187,7 +190,6 @@ const SearchPage: React.FC = () => {
         </Box>
       );
     }
-
     return null;
   };
 
@@ -202,7 +204,28 @@ const SearchPage: React.FC = () => {
           />
         )}
 
-        <SearchBar value={searchTerm} onChange={setSearchTerm} />
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "1fr auto",
+              md: "1fr auto",
+              lg: "1fr auto",
+            },
+            justifyContent: "center",
+          }}
+        >
+          <Typography
+            variant="h4"
+            component="h1"
+            sx={{ my: 4, fontWeight: "bold" }}
+          >
+            Search
+          </Typography>
+
+          <SearchBar value={searchTerm} onChange={setSearchTerm} />
+        </Box>
         {renderContent()}
       </Container>
     </PageWrapper>
