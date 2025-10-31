@@ -1,5 +1,4 @@
-import { Review } from 'src/review/entities/review.entity';
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity()
 export class Movie {
@@ -21,7 +20,15 @@ export class Movie {
   @Column()
   poster: string;
 
+  @Column({ nullable: true })
+  rating?: number;
+
+  @Column({ nullable: true })
+  audioPath?: string;
+
+  /*
   // Um Movie para Muitos Reviews
   @OneToMany(() => Review, (review) => review.movie)
   reviews: Review[]; // Propriedade para acessar as reviews do filme
+  */
 }
