@@ -1,16 +1,23 @@
 import React from "react";
-import { Toolbar } from "@mui/material";
-import { AppBarStyled, Logo, NavContainer, NavLink } from "./Header.styles";
+import { Container, Toolbar } from "@mui/material";
+import {
+  AppBarStyled,
+  Logo,
+  NavContainer,
+  NavLinkStyled,
+} from "./Header.styles";
 
 const Header: React.FC = () => {
   return (
     <AppBarStyled position="static">
       <Toolbar>
-        <Logo>Moovy</Logo>
-        <NavContainer>
-          <NavLink>Search</NavLink>
-          <NavLink className="active">My Library</NavLink>
-        </NavContainer>
+        <Container maxWidth="lg" sx={{ display: "flex", alignItems: "center" }}>
+          <Logo>Moovy</Logo>
+          <NavContainer>
+            <NavLinkStyled to="/">Search</NavLinkStyled>
+            <NavLinkStyled to="/library">My Library</NavLinkStyled>
+          </NavContainer>
+        </Container>
       </Toolbar>
     </AppBarStyled>
   );
