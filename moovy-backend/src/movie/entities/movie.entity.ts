@@ -25,10 +25,4 @@ export class Movie {
 
   @Column({ nullable: true })
   audioPath?: string;
-
-  /*
-  // Um Movie para Muitos Reviews
-  @OneToMany(() => Review, (review) => review.movie)
-  reviews: Review[]; // Propriedade para acessar as reviews do filme
-  */
 }

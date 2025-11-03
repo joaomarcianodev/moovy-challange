@@ -5,9 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
 import { ApiModule } from './api/api.module';
-import { UserModule } from './user/user.module';
 import { MovieModule } from './movie/movie.module';
-import { ReviewModule } from './review/review.module';
 
 @Module({
   imports: [
@@ -37,11 +35,7 @@ import { ReviewModule } from './review/review.module';
 
     ApiModule,
 
-    UserModule,
-
     MovieModule,
-
-    ReviewModule,
   ],
   controllers: [AppController],
   providers: [AppService],
