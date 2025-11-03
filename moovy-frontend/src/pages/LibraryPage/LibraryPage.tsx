@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { PageWrapper } from "./LibraryPage.styles";
 import { Container, Typography, Box, CircularProgress } from "@mui/material";
 import Header from "../../components/Header/Header";
-import { PageWrapper } from "./LibraryPage.styles";
 import EmptyState from "../../components/EmptyState/EmptyState";
 import MovieCard from "../../components/MovieCard/MovieCard";
 import { type Movie } from "../../components/MovieCard/MovieCard.types";
 import NotificationBar from "../../components/NotificationBar/NotificationBar";
+import AudioRecorderModal from "../../components/AudioRecorderModal/AudioRecorderModal";
+import ConfirmationModal from "../../components/ConfirmationModal/ConfirmationModal";
 
 interface ApiLibraryMovie {
   id: number;
@@ -15,6 +17,7 @@ interface ApiLibraryMovie {
   type: string;
   poster: string;
   rating: string | null;
+  audioPath: string | null;
 }
 
 const mapResponseToMovie = (apiMovie: ApiLibraryMovie): Movie => {
@@ -27,6 +30,7 @@ const mapResponseToMovie = (apiMovie: ApiLibraryMovie): Movie => {
     isAdded: true,
     year: apiMovie.year,
     type: apiMovie.type,
+    audioPath: apiMovie.audioPath ?? null,
   };
 };
 
@@ -38,7 +42,16 @@ const LibraryPage: React.FC = () => {
     null
   );
 
+  // Estados do Modal de Gravação
+  const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+
+  // 2. Estados para o Modal de Confirmação de Exclusão
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [movieToDelete, setMovieToDelete] = useState<Movie | null>(null);
+
   useEffect(() => {
+    // ... (lógica do fetchMovies não muda) ...
     const fetchMovies = async () => {
       setIsLoading(true);
       setError(null);
@@ -52,7 +65,6 @@ const LibraryPage: React.FC = () => {
         const formattedMovies = data.map(mapResponseToMovie);
         setMovies(formattedMovies);
       } catch (err) {
-        // Bloco catch simplificado
         if (err instanceof Error) {
           if (err.message === "Failed to fetch") {
             setError(
@@ -69,30 +81,28 @@ const LibraryPage: React.FC = () => {
         setIsLoading(false);
       }
     };
-
     fetchMovies();
   }, []);
 
   useEffect(() => {
+    // ... (lógica da notificationMessage não muda) ...
     if (notificationMessage) {
       const timer = setTimeout(() => {
         setNotificationMessage(null);
       }, 5000);
-
       return () => {
         clearTimeout(timer);
       };
     }
   }, [notificationMessage]);
 
-  const handleRemoveFromLibrary = async (movieToRemove: Movie) => {
+  // 3. Renomeada: Esta é a lógica de execução da exclusão
+  const executeDelete = async (movieToRemove: Movie) => {
     const databaseId = movieToRemove.movieId;
-
     if (!databaseId) {
       setError("Unable to remove movie. Try reloading the page.");
       return;
     }
-
     try {
       const response = await fetch(
         `http://localhost:3000/movies/${databaseId}`,
@@ -100,15 +110,12 @@ const LibraryPage: React.FC = () => {
           method: "DELETE",
         }
       );
-
       if (!response.ok) {
         throw new Error("Failed to remove movie from server.");
       }
-
       setMovies((prevMovies) =>
         prevMovies.filter((movie) => movie.movieId !== databaseId)
       );
-
       setNotificationMessage(
         `${movieToRemove.title} deleted from your watchlist.`
       );
@@ -120,11 +127,85 @@ const LibraryPage: React.FC = () => {
     }
   };
 
+  // 4. Nova função: Chamada quando o botão "Remove" do Card é clicado
+  const handleRemoveClick = (movie: Movie) => {
+    if (movie.audioPath) {
+      // Se tem áudio, abre o modal de confirmação
+      setMovieToDelete(movie);
+      setIsConfirmModalOpen(true);
+    } else {
+      // Se não tem áudio, deleta direto
+      executeDelete(movie);
+    }
+  };
+
+  // 5. Nova função: Chamada pelo botão "Remove" do modal de confirmação
+  const handleConfirmDelete = () => {
+    if (movieToDelete) {
+      executeDelete(movieToDelete);
+    }
+    // Fecha o modal
+    setMovieToDelete(null);
+    setIsConfirmModalOpen(false);
+  };
+
+  // 6. Nova função: Chamada pelo botão "Cancel" do modal de confirmação
+  const handleCloseConfirmModal = () => {
+    setMovieToDelete(null);
+    setIsConfirmModalOpen(false);
+  };
+
   const handleCloseNotification = () => {
     setNotificationMessage(null);
   };
 
+  // ... (funções do modal de gravação não mudam) ...
+  const handleOpenRecordModal = (movie: Movie) => {
+    setSelectedMovie(movie);
+    setIsRecordModalOpen(true);
+  };
+  const handleCloseRecordModal = () => {
+    setSelectedMovie(null);
+    setIsRecordModalOpen(false);
+  };
+  const handleSaveAudio = async (audioBlob: Blob) => {
+    if (!selectedMovie || !selectedMovie.movieId) {
+      setNotificationMessage("Error: No movie selected for saving audio.");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("file", audioBlob, `${selectedMovie.movieId}.webm`);
+    try {
+      const response = await fetch(
+        `http://localhost:3000/movies/${selectedMovie.movieId}/audio`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to upload audio.");
+      }
+      const updatedMovie: ApiLibraryMovie = await response.json();
+      setMovies((prevMovies) =>
+        prevMovies.map((movie) =>
+          movie.movieId === updatedMovie.id
+            ? { ...movie, audioPath: updatedMovie.audioPath }
+            : movie
+        )
+      );
+      setNotificationMessage(`Audio saved for ${updatedMovie.title}.`);
+      handleCloseRecordModal();
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "An unknown error occurred.";
+      setNotificationMessage(`Audio save failed: ${message}`);
+      console.error(err);
+    }
+  };
+
   const renderContent = () => {
+    // ... (isLoading, error, movies.length === 0 não mudam) ...
     if (isLoading) {
       return (
         <Box sx={{ display: "flex", justifyContent: "center", my: 10 }}>
@@ -132,7 +213,6 @@ const LibraryPage: React.FC = () => {
         </Box>
       );
     }
-
     if (error) {
       return (
         <Typography color="error" align="center" sx={{ my: 10 }}>
@@ -140,7 +220,6 @@ const LibraryPage: React.FC = () => {
         </Typography>
       );
     }
-
     if (movies.length === 0) {
       return (
         <EmptyState message="It looks like there are no movies in your library! Search for a movie you have watched and add it here!" />
@@ -166,7 +245,8 @@ const LibraryPage: React.FC = () => {
             movie={movie}
             key={movie.id}
             onAdd={() => {}}
-            onRemove={handleRemoveFromLibrary}
+            onRemove={handleRemoveClick} // 7. ATUALIZADO
+            onRecordClick={handleOpenRecordModal}
           />
         ))}
       </Box>
@@ -194,6 +274,27 @@ const LibraryPage: React.FC = () => {
 
         {renderContent()}
       </Container>
+
+      {/* Modal de Gravação */}
+      {selectedMovie && (
+        <AudioRecorderModal
+          open={isRecordModalOpen}
+          onClose={handleCloseRecordModal}
+          onSave={handleSaveAudio}
+          movieTitle={selectedMovie.title}
+          existingAudioPath={selectedMovie.audioPath ?? null}
+        />
+      )}
+
+      {/* 8. Adicionar o Modal de Confirmação de Exclusão */}
+      {movieToDelete && (
+        <ConfirmationModal
+          open={isConfirmModalOpen}
+          onClose={handleCloseConfirmModal}
+          onConfirm={handleConfirmDelete}
+          movieTitle={movieToDelete.title}
+        />
+      )}
     </PageWrapper>
   );
 };

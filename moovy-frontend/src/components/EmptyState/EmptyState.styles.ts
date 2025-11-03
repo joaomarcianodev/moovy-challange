@@ -9,14 +9,14 @@ export const EmptyWrapper = styled(Box)(({ theme }) => ({
   alignItems: "center",
   justifyContent: "center",
   padding: theme.spacing(4),
-  marginTop: theme.spacing(8), // Um espaço do topo
+  marginTop: theme.spacing(8),
   color: theme.palette.text.secondary,
 }));
 
 // O ícone grande
 export const EmptyIcon = styled(SearchIcon)(({ theme }) => ({
   fontSize: "100px",
-  color: theme.palette.divider, // Um cinza claro
+  color: theme.palette.divider,
   marginBottom: theme.spacing(3),
 }));
 

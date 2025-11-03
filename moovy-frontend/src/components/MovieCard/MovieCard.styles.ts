@@ -1,8 +1,7 @@
 import { styled } from "@mui/material/styles";
 import { Card, Box, Button } from "@mui/material";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 
+// Fundo do card
 export const CardWrapper = styled(Card)({
   borderRadius: 16,
   boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
@@ -14,16 +13,45 @@ export const CardWrapper = styled(Card)({
   flexDirection: "column",
 });
 
-export const CardImage = styled("img")({
+// Container da imagem do card
+export const ImageContainer = styled(Box)({
+  position: "relative",
   height: 300,
   width: "100%",
-  objectFit: "cover", // Corta a imagem para caber, sem distorcer
-  flexShrink: 0, // Garante que a imagem não encolha
+  flexShrink: 0,
 });
 
-// Estilo para o placeholder de imagem
+// Ao passar o mouse sobre a imagem do card
+export const RecordOverlay = styled(Box)({
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: "rgba(0, 0, 0, 0.6)",
+  color: "#fff",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  opacity: 0, // Escondido
+  transition: "opacity 0.2s ease-in-out",
+  cursor: "pointer",
+  "&:hover": {
+    opacity: 1, // Aparece no hover
+  },
+});
+
+// Imagem em si
+export const CardImage = styled("img")({
+  height: "100%",
+  width: "100%",
+  objectFit: "cover",
+});
+
+// Quando não tiver imagem
 export const CardImagePlaceholder = styled(Box)({
-  height: 300,
+  height: "100%",
   width: "100%",
   backgroundColor: "#D0D0D0",
   display: "flex",
@@ -33,18 +61,20 @@ export const CardImagePlaceholder = styled(Box)({
   fontWeight: "bold",
   fontSize: "1.2rem",
   textAlign: "center",
-  flexShrink: 0, // Garante que o placeholder não encolha
+  flexShrink: 0,
 });
 
+// Restante do Card
 export const CardBody = styled(Box)(({ theme }) => ({
   padding: theme.spacing(2),
   backgroundColor: "#ffffff",
-  flexGrow: 1, // Permite que o body preencha o espaço restante, empurrando o botão para baixo
+  flexGrow: 1,
   display: "flex",
   flexDirection: "column",
-  justifyContent: "space-between", // Empurra o botão para baixo se houver espaço extra
+  justifyContent: "space-between",
 }));
 
+// Título
 export const TitleRow = styled(Box)({
   display: "flex",
   justifyContent: "space-between",
@@ -52,6 +82,7 @@ export const TitleRow = styled(Box)({
   marginBottom: "12px",
 });
 
+// Avaliação
 export const Rating = styled(Box)({
   display: "flex",
   alignItems: "center",
@@ -59,6 +90,7 @@ export const Rating = styled(Box)({
   fontWeight: "bold",
 });
 
+// Botão de adicionar
 export const AddButton = styled(Button)({
   backgroundColor: "#20C978",
   color: "#fff",
@@ -68,6 +100,7 @@ export const AddButton = styled(Button)({
   },
 });
 
+// Botão de remover
 export const RemoveButton = styled(Button)(({ theme }) => ({
   backgroundColor: theme.palette.secondary.main,
   color: "#fff",
@@ -76,5 +109,3 @@ export const RemoveButton = styled(Button)(({ theme }) => ({
     backgroundColor: theme.palette.secondary.dark,
   },
 }));
-
-export { AddCircleOutlineIcon, RemoveCircleOutlineIcon };

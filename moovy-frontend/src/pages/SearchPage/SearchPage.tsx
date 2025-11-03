@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { PageWrapper } from "./SearchPage.styles";
 import { Container, Box, CircularProgress, Typography } from "@mui/material";
 import Header from "../../components/Header/Header";
 import NotificationBar from "../../components/NotificationBar/NotificationBar";
 import SearchBar from "../../components/SearchBar/SearchBar";
 import MovieCard from "../../components/MovieCard/MovieCard";
-import { PageWrapper } from "./SearchPage.styles";
+import ConfirmationModal from "../../components/ConfirmationModal/ConfirmationModal";
 import { type Movie } from "../../components/MovieCard/MovieCard.types";
 import { useDebounce } from "../../hooks/useDebounce";
 
@@ -23,23 +24,21 @@ interface Response {
   totalResults?: string;
 }
 
-// Interface para os filmes salvos no seu banco de dados
 interface ApiLibraryMovie {
-  id: number; // O ID do banco (ex: 1, 2, 3)
+  id: number;
   title: string;
   year: number;
   imdbId: string;
   type: string;
   poster: string;
-  rating: number | null;
+  rating?: string;
+  audioPath?: string;
 }
 
-// Recebe a lista do banco de dados para comparar
 const mapResponseToMovie = (
   apiMovie: ApiMovie,
   libraryMovies: ApiLibraryMovie[]
 ): Movie => {
-  // Procura se o filme da API (OMDB) já existe na lista da biblioteca (banco)
   const movieInLibrary = libraryMovies.find(
     (libMovie) => libMovie.imdbId === apiMovie.imdbID
   );
@@ -50,11 +49,10 @@ const mapResponseToMovie = (
     imageUrl: apiMovie.Poster,
     type: apiMovie.Type,
     year: parseInt(apiMovie.Year, 10),
-    rating: "0.0", // Usando o seu valor fixo
-    // Define 'isAdded' com base se o filme foi encontrado
+    rating: "0.0",
     isAdded: !!movieInLibrary,
-    // Salva o ID do banco (se existir) para usarmos no DELETE
     movieId: movieInLibrary ? movieInLibrary.id : undefined,
+    audioPath: movieInLibrary ? movieInLibrary.audioPath : null,
   };
 };
 
@@ -67,7 +65,8 @@ const SearchPage: React.FC = () => {
   const [notificationMessage, setNotificationMessage] = useState<string | null>(
     null
   );
-
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [movieToDelete, setMovieToDelete] = useState<Movie | null>(null);
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   useEffect(() => {
@@ -185,7 +184,12 @@ const SearchPage: React.FC = () => {
       setMovies((prevMovies) =>
         prevMovies.map((movie) =>
           movie.id === movieToAdd.id
-            ? { ...movie, isAdded: true, movieId: savedMovie.id }
+            ? {
+                ...movie,
+                isAdded: true,
+                movieId: savedMovie.id,
+                audioPath: savedMovie.audioPath,
+              }
             : movie
         )
       );
@@ -199,7 +203,6 @@ const SearchPage: React.FC = () => {
       setNotificationMessage(`Fail: ${errorMessage}`);
       console.error("Failed to add movie:", err);
 
-      // Reverter o estado visual se a API falhar
       setMovies((prevMovies) =>
         prevMovies.map((movie) =>
           movie.id === movieToAdd.id ? { ...movie, isAdded: false } : movie
@@ -208,15 +211,12 @@ const SearchPage: React.FC = () => {
     }
   };
 
-  const handleRemoveFromLibrary = async (movieToRemove: Movie) => {
-    // Pega o ID do banco que salvamos ao adicionar
+  const executeDelete = async (movieToRemove: Movie) => {
     const databaseId = movieToRemove.movieId;
-
     if (!databaseId) {
       setNotificationMessage(`Error: Cannot remove movie. ID not found.`);
       return;
     }
-
     try {
       const response = await fetch(
         `http://localhost:3000/movies/${databaseId}`,
@@ -224,16 +224,14 @@ const SearchPage: React.FC = () => {
           method: "DELETE",
         }
       );
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to remove movie.");
       }
-
       setMovies((prevMovies) =>
         prevMovies.map((movie) =>
           movie.id === movieToRemove.id
-            ? { ...movie, isAdded: false, movieId: undefined }
+            ? { ...movie, isAdded: false, movieId: undefined, audioPath: null }
             : movie
         )
       );
@@ -247,14 +245,36 @@ const SearchPage: React.FC = () => {
       }
       setNotificationMessage(`Fail: ${errorMessage}`);
       console.error("Failed to remove movie:", err);
-
-      // Reverte o botão para "Remove"
       setMovies((prevMovies) =>
         prevMovies.map((movie) =>
           movie.id === movieToRemove.id ? { ...movie, isAdded: true } : movie
         )
       );
     }
+  };
+
+  const handleRemoveClick = (movie: Movie) => {
+    if (movie.audioPath) {
+      // Se tem áudio, abre o modal de confirmação
+      setMovieToDelete(movie);
+      setIsConfirmModalOpen(true);
+    } else {
+      // Se não tem áudio, deleta direto
+      executeDelete(movie);
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (movieToDelete) {
+      executeDelete(movieToDelete);
+    }
+    setMovieToDelete(null);
+    setIsConfirmModalOpen(false);
+  };
+
+  const handleCloseConfirmModal = () => {
+    setMovieToDelete(null);
+    setIsConfirmModalOpen(false);
   };
 
   const handleCloseNotification = () => {
@@ -303,7 +323,7 @@ const SearchPage: React.FC = () => {
               movie={movie}
               key={movie.id}
               onAdd={handleAddToLibrary}
-              onRemove={handleRemoveFromLibrary}
+              onRemove={handleRemoveClick}
             />
           ))}
         </Box>
@@ -347,6 +367,15 @@ const SearchPage: React.FC = () => {
         </Box>
         {renderContent()}
       </Container>
+
+      {movieToDelete && (
+        <ConfirmationModal
+          open={isConfirmModalOpen}
+          onClose={handleCloseConfirmModal}
+          onConfirm={handleConfirmDelete}
+          movieTitle={movieToDelete.title}
+        />
+      )}
     </PageWrapper>
   );
 };

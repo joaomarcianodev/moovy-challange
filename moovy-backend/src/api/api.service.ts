@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
 
-// 1. Interface para a resposta da busca por TÍTULO (parâmetro s=)
+// Interface para a resposta da busca por TÍTULO (parâmetro s=)
 interface OmdbSearchResponse {
   Search: {
     Title: string;
@@ -18,7 +18,7 @@ interface OmdbSearchResponse {
   totalResults?: string;
 }
 
-// 2. Interface para a resposta da busca por ID (parâmetro i=)
+// Interface para a resposta da busca por ID (parâmetro i=)
 interface OmdbMovieResponse {
   Title: string;
   Year: string;
@@ -43,6 +43,7 @@ export class ApiService {
     }
   }
 
+  // Buscar todos os filmes que correspondem ao título
   public async buscarDadosDaApi(title: string): Promise<OmdbSearchResponse> {
     const url = `https://www.omdbapi.com/?type=movie&s=${title}&apikey=${this.apiKey}`;
 
@@ -67,6 +68,7 @@ export class ApiService {
     }
   }
 
+  // Buscar dados de UM filme pelo imdbID
   public async buscarDadosImdb(imdbId: string): Promise<string> {
     const url = `https://www.omdbapi.com/?i=${imdbId}&apikey=${this.apiKey}`;
 

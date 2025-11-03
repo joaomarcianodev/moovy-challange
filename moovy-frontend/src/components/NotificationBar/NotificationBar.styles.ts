@@ -1,6 +1,7 @@
 import { styled } from "@mui/material/styles";
 import { Box, Button } from "@mui/material";
 
+// Pop-up de notificação no topo da tela
 export const NotificationWrapper = styled(Box)(({ theme }) => ({
   backgroundColor: "#6c757d",
   color: "#fff",
@@ -18,6 +19,7 @@ export const NotificationWrapper = styled(Box)(({ theme }) => ({
   width: "calc(100% - 40px)",
 }));
 
+// Botão para fechar a notificação
 export const OkButton = styled(Button)({
   color: "#fff",
   borderColor: "#fff",
