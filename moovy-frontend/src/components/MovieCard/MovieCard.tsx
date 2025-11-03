@@ -45,7 +45,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onAdd, onRemove }) => {
           </Typography>
           <Rating>
             <StarIcon sx={{ fontSize: "1.1rem" }} />
-            &nbsp;{movie.rating.toFixed(1)}
+            &nbsp;{movie.rating}
           </Rating>
         </TitleRow>
 

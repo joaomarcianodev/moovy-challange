@@ -4,7 +4,7 @@ export interface Movie {
   year: number;
   title: string;
   type: string;
-  rating: number; // A API não fornece, vamos gerar um mock
+  rating: string; // A API não fornece, vamos gerar um mock
   imageUrl: string; // A API fornece 'Poster'
   isAdded: boolean; // Estado da nossa aplicação
 }

@@ -50,11 +50,11 @@ const mapResponseToMovie = (
     imageUrl: apiMovie.Poster,
     type: apiMovie.Type,
     year: parseInt(apiMovie.Year, 10),
-    rating: 9.9, // Usando o seu valor fixo
+    rating: "0.0", // Usando o seu valor fixo
     // Define 'isAdded' com base se o filme foi encontrado
     isAdded: !!movieInLibrary,
     // Salva o ID do banco (se existir) para usarmos no DELETE
-    movieId: movieInLibrary ? movieInLibrary.id : undefined, // <-- ALTERADO
+    movieId: movieInLibrary ? movieInLibrary.id : undefined,
   };
 };
 
@@ -83,13 +83,11 @@ const SearchPage: React.FC = () => {
       setInfoMessage(null);
 
       try {
-        // 1. Prepara as duas requisições
         const searchPromise = fetch(
           `http://localhost:3000/api/${debouncedSearchTerm}`
         );
         const libraryPromise = fetch("http://localhost:3000/movies");
 
-        // 2. Executa as duas em paralelo
         const [searchResponse, libraryResponse] = await Promise.all([
           searchPromise,
           libraryPromise,
@@ -99,18 +97,14 @@ const SearchPage: React.FC = () => {
           throw new Error("Could not connect to the movie search API.");
         }
         if (!libraryResponse.ok) {
-          // Trata falha ao buscar a biblioteca, mas não impede a busca
           console.error("Could not connect to your library database.");
-          // Lança o erro para parar a execução
           throw new Error("Could not connect to your library database.");
         }
 
-        // 3. Processa os resultados
         const data: Response = await searchResponse.json();
         const libraryData: ApiLibraryMovie[] = await libraryResponse.json();
 
         if (data.Response === "True" && data.Search && data.Search.length > 0) {
-          // 4. Mapeia os resultados passando a lista da biblioteca
           const mappedMovies = data.Search.map((apiMovie) =>
             mapResponseToMovie(apiMovie, libraryData)
           );
@@ -174,7 +168,6 @@ const SearchPage: React.FC = () => {
     };
 
     try {
-      // 2. Faça a requisição POST para "http://localhost:3000/movies"
       const response = await fetch("http://localhost:3000/movies", {
         method: "POST",
         headers: {
@@ -184,23 +177,19 @@ const SearchPage: React.FC = () => {
       });
 
       if (!response.ok) {
-        // Se o backend retornar um erro (ex: filme já existe), capture a mensagem
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to add movie.");
       }
 
-      // 3. Capture o filme salvo (que contém o ID do banco)
       const savedMovie: ApiLibraryMovie = await response.json();
-
-      // 4. Atualize o estado, salvando o 'movieId' (ID do banco)
       setMovies((prevMovies) =>
         prevMovies.map((movie) =>
           movie.id === movieToAdd.id
-            ? { ...movie, isAdded: true, movieId: savedMovie.id } // <-- ALTERADO
+            ? { ...movie, isAdded: true, movieId: savedMovie.id }
             : movie
         )
       );
-      setNotificationMessage(`${movieToAdd.title} added to your Library`);
+      setNotificationMessage(`${movieToAdd.title} added to your Library.`);
     } catch (err) {
       let errorMessage = "An unknown error has occurred.";
       if (err instanceof Error) {
@@ -221,7 +210,7 @@ const SearchPage: React.FC = () => {
 
   const handleRemoveFromLibrary = async (movieToRemove: Movie) => {
     // Pega o ID do banco que salvamos ao adicionar
-    const databaseId = movieToRemove.movieId; // <-- ALTERADO
+    const databaseId = movieToRemove.movieId;
 
     if (!databaseId) {
       setNotificationMessage(`Error: Cannot remove movie. ID not found.`);
@@ -229,7 +218,6 @@ const SearchPage: React.FC = () => {
     }
 
     try {
-      // 1. Faça a requisição DELETE para "http://localhost:3000/movies/{id_do_banco}"
       const response = await fetch(
         `http://localhost:3000/movies/${databaseId}`,
         {
@@ -242,19 +230,17 @@ const SearchPage: React.FC = () => {
         throw new Error(errorData.message || "Failed to remove movie.");
       }
 
-      // 2. Se deu certo, atualize a UI
       setMovies((prevMovies) =>
         prevMovies.map((movie) =>
           movie.id === movieToRemove.id
-            ? { ...movie, isAdded: false, movieId: undefined } // <-- ALTERADO
+            ? { ...movie, isAdded: false, movieId: undefined }
             : movie
         )
       );
       setNotificationMessage(
-        `${movieToRemove.title} removed from your Library`
+        `${movieToRemove.title} deleted from your watchlist.`
       );
     } catch (err) {
-      // 3. Se falhar, mostre o erro e reverta a UI
       let errorMessage = "An unknown error has occurred.";
       if (err instanceof Error) {
         errorMessage = err.message;
