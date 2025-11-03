@@ -5,6 +5,7 @@ import { PageWrapper } from "./LibraryPage.styles";
 import EmptyState from "../../components/EmptyState/EmptyState";
 import MovieCard from "../../components/MovieCard/MovieCard";
 import { type Movie } from "../../components/MovieCard/MovieCard.types";
+import NotificationBar from "../../components/NotificationBar/NotificationBar";
 
 interface ApiLibraryMovie {
   id: number;
@@ -13,23 +14,19 @@ interface ApiLibraryMovie {
   imdbId: string;
   type: string;
   poster: string;
+  rating: string | null;
 }
 
-interface Response {
-  id: number;
-  rating: number | null;
-  path: string | null;
-  movie: ApiLibraryMovie;
-}
-
-const mapResponseToMovie = (review: Response): Movie => {
+const mapResponseToMovie = (apiMovie: ApiLibraryMovie): Movie => {
   return {
-    id: review.movie.imdbId, // O ID do Card (key) é o imdbId
-    reviewId: review.id, // <-- 1. ADICIONE ISTO: O ID da review para o DELETE
-    title: review.movie.title,
-    imageUrl: review.movie.poster,
-    rating: review.rating ?? Math.random() * 4 + 6,
+    id: apiMovie.imdbId,
+    movieId: apiMovie.id,
+    title: apiMovie.title,
+    imageUrl: apiMovie.poster,
+    rating: apiMovie.rating ?? "0.0",
     isAdded: true,
+    year: apiMovie.year,
+    type: apiMovie.type,
   };
 };
 
@@ -37,54 +34,68 @@ const LibraryPage: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notificationMessage, setNotificationMessage] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
-    const fetchReviews = async () => {
+    const fetchMovies = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch("http://localhost:3000/reviews");
+        const response = await fetch("http://localhost:3000/movies");
 
         if (!response.ok) {
           throw new Error("Could not connect to the server.");
         }
-        const data: Response[] = await response.json();
+        const data: ApiLibraryMovie[] = await response.json();
         const formattedMovies = data.map(mapResponseToMovie);
         setMovies(formattedMovies);
       } catch (err) {
-        let userFriendlyMessage = "An unknown error has occurred.";
-
+        // Bloco catch simplificado
         if (err instanceof Error) {
           if (err.message === "Failed to fetch") {
-            userFriendlyMessage =
-              "Could not connect to the server. Please check your internet connection or try again later.";
+            setError(
+              "Could not connect to the server. Please check your internet connection or try again later."
+            );
           } else {
-            userFriendlyMessage = err.message;
+            setError(err.message);
           }
+        } else {
+          setError("An unknown error has occurred.");
         }
-        setError(userFriendlyMessage);
         setMovies([]);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchReviews();
+    fetchMovies();
   }, []);
 
+  useEffect(() => {
+    if (notificationMessage) {
+      const timer = setTimeout(() => {
+        setNotificationMessage(null);
+      }, 5000);
+
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [notificationMessage]);
+
   const handleRemoveFromLibrary = async (movieToRemove: Movie) => {
-    // Verifica se temos o ID da review (essencial para o DELETE)
-    if (!movieToRemove.reviewId) {
+    const databaseId = movieToRemove.movieId;
+
+    if (!databaseId) {
       setError("Unable to remove movie. Try reloading the page.");
       return;
     }
 
-    const reviewId = movieToRemove.reviewId;
-
     try {
-      // Faz a requisição DELETE para a API
       const response = await fetch(
-        `http://localhost:3000/reviews/${reviewId}`,
+        `http://localhost:3000/movies/${databaseId}`,
         {
           method: "DELETE",
         }
@@ -94,21 +105,27 @@ const LibraryPage: React.FC = () => {
         throw new Error("Failed to remove movie from server.");
       }
 
-      // Se a API removeu com sucesso, atualize o estado da UI
-      // Filtrando a lista para remover o filme
       setMovies((prevMovies) =>
-        prevMovies.filter((movie) => movie.reviewId !== reviewId)
+        prevMovies.filter((movie) => movie.movieId !== databaseId)
+      );
+
+      setNotificationMessage(
+        `${movieToRemove.title} deleted from your watchlist.`
       );
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "An unknown error has occurred."
-      );
+      const message =
+        err instanceof Error ? err.message : "An unknown error has occurred.";
+      setError(message);
+      setNotificationMessage(`Fail: ${message}`);
     }
+  };
+
+  const handleCloseNotification = () => {
+    setNotificationMessage(null);
   };
 
   const renderContent = () => {
     if (isLoading) {
-      // ... (código do loading)
       return (
         <Box sx={{ display: "flex", justifyContent: "center", my: 10 }}>
           <CircularProgress />
@@ -117,7 +134,6 @@ const LibraryPage: React.FC = () => {
     }
 
     if (error) {
-      // ... (código do erro)
       return (
         <Typography color="error" align="center" sx={{ my: 10 }}>
           Erro: {error}
@@ -126,13 +142,11 @@ const LibraryPage: React.FC = () => {
     }
 
     if (movies.length === 0) {
-      // ... (código do EmptyState)
       return (
         <EmptyState message="It looks like there are no movies in your library! Search for a movie you have watched and add it here!" />
       );
     }
 
-    // 10. Sucesso! Renderiza o grid de MovieCards
     return (
       <Box
         sx={{
@@ -151,8 +165,7 @@ const LibraryPage: React.FC = () => {
           <MovieCard
             movie={movie}
             key={movie.id}
-            onAdd={() => {}} // onAdd não é usado aqui
-            // 3. PASSE O NOVO HANDLER PARA A PROP
+            onAdd={() => {}}
             onRemove={handleRemoveFromLibrary}
           />
         ))}
@@ -164,6 +177,13 @@ const LibraryPage: React.FC = () => {
     <PageWrapper>
       <Header />
       <Container maxWidth="lg">
+        {notificationMessage && (
+          <NotificationBar
+            message={notificationMessage}
+            onClose={handleCloseNotification}
+          />
+        )}
+
         <Typography
           variant="h4"
           component="h1"
