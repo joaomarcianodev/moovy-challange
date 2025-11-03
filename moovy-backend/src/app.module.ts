@@ -6,6 +6,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { HttpModule } from '@nestjs/axios';
 import { ApiModule } from './api/api.module';
 import { MovieModule } from './movie/movie.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -29,6 +31,12 @@ import { MovieModule } from './movie/movie.module';
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         synchronize: true,
       }),
+    }),
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/media',
     }),
 
     HttpModule,

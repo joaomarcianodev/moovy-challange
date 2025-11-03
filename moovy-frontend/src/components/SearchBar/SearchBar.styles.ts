@@ -1,12 +1,14 @@
 import { styled } from "@mui/material/styles";
 import { Box, OutlinedInput } from "@mui/material";
 
+// Container da barra de pesquisa
 export const SearchWrapper = styled(Box)(({ theme }) => ({
   display: "flex",
   justifyContent: "center",
-  margin: theme.spacing(3, 0), // Usa o espaçamento do tema
+  margin: theme.spacing(3, 0),
 }));
 
+// Estilo do campo de entrada da pesquisa
 export const SearchInputStyled = styled(OutlinedInput)({
   backgroundColor: "#fff",
   borderRadius: "50px",
