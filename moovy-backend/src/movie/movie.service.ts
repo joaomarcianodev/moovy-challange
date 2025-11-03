@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -19,17 +19,17 @@ export class MovieService {
 
     const existMovies = await this.movieRepository.find();
     if (existMovies.some((movie) => movie.imdbId === newMovie.imdbId)) {
-      throw new Error('Filme já cadastrado no sistema');
+      throw new ConflictException('Movie already registered in the system');
     }
 
-    let imdbRating: number;
+    let imdbRating: string;
     try {
       imdbRating = await this.apiService.buscarDadosImdb(newMovie.imdbId);
     } catch (error) {
       if (error instanceof Error) {
         console.error('Mensagem do Erro:', error.message);
       }
-      imdbRating = 0.0;
+      imdbRating = '0.0';
     }
     newMovie.rating = imdbRating;
 
