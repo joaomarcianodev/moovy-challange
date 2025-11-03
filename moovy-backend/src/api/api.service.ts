@@ -23,7 +23,7 @@ interface OmdbMovieResponse {
   Title: string;
   Year: string;
   imdbID: string;
-  imdbRating: number;
+  imdbRating: string;
   Ratings: { Source: string; Value: string }[];
   Response: 'True' | 'False';
   Error?: string;
@@ -67,7 +67,7 @@ export class ApiService {
     }
   }
 
-  public async buscarDadosImdb(imdbId: string): Promise<number> {
+  public async buscarDadosImdb(imdbId: string): Promise<string> {
     const url = `https://www.omdbapi.com/?i=${imdbId}&apikey=${this.apiKey}`;
 
     try {

@@ -21,7 +21,7 @@ export class Movie {
   poster: string;
 
   @Column({ nullable: true })
-  rating?: number;
+  rating?: string;
 
   @Column({ nullable: true })
   audioPath?: string;

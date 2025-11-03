@@ -23,7 +23,7 @@ export class ApiController {
   @Get()
   public async searchRatingImdbMovie(
     @Query('imdbId') imdbId: string,
-  ): Promise<number> {
+  ): Promise<string> {
     if (!imdbId) {
       throw new BadRequestException('O parâmetro "imdbId" não pode ser vazio.');
     }
